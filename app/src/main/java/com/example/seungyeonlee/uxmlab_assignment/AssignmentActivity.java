@@ -35,7 +35,6 @@ public class AssignmentActivity extends AppCompatActivity {
     private TextView texts;//본문내용
 //    Assignment assignment;
     private Button sendButton;
-    ArrayList mArrayList;//밑에 리스트 담을 어레이리스트
     String myJSON;
     JSONArray peoples = null;
 
@@ -61,8 +60,7 @@ public class AssignmentActivity extends AppCompatActivity {
 
 //        sendButton = (Button) findViewById(R.id.button);
 
-        mArrayList = new ArrayList<>();
-        getJSON("http://192.168.101.1/Android/getdata.php");
+//        getJSON("http://192.168.101.1/Android/getdata.php");
         AssignmentListViewAdapter adapter;
 
         // Adapter 생성
@@ -95,58 +93,5 @@ public class AssignmentActivity extends AppCompatActivity {
 //        });
     }
 
-    private void getJSON(final String urlWebService) {
 
-        class GetJSON extends AsyncTask<Void, Void, String> {
-
-            @Override
-            protected void onPreExecute() {
-                super.onPreExecute();
-            }
-
-
-            @Override
-            protected void onPostExecute(String s) {
-                super.onPostExecute(s);
-                Toast.makeText(getApplicationContext(), s, Toast.LENGTH_SHORT).show();
-                try {
-                    loadIntoListView(s);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            protected String doInBackground(Void... voids) {
-                try {
-                    URL url = new URL(urlWebService);
-                    HttpURLConnection con = (HttpURLConnection) url.openConnection();
-                    StringBuilder sb = new StringBuilder();
-                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(con.getInputStream()));
-                    String json;
-                    while ((json = bufferedReader.readLine()) != null) {
-                        sb.append(json + "\n");
-                    }
-                    return sb.toString().trim();
-                } catch (Exception e) {
-                    return null;
-                }
-            }
-        }
-        GetJSON getJSON = new GetJSON();
-        getJSON.execute();
-    }
-
-    private void loadIntoListView(String json) throws JSONException {
-        JSONArray jsonArray = new JSONArray(json);
-        String[] hwInfo = new String[jsonArray.length()];
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject obj = jsonArray.getJSONObject(i);
-            hwInfo[i] = obj.getString("hw_name");
-        }
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.list_content, hwInfo);
-        asListView.setAdapter(arrayAdapter);
-        arrayAdapter.add("");
-
-    }
 }
