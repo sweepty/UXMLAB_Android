@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">UXMLAB_Assignment</string>
+    <string name="submit">제출하기</string>
+    <string name="edit">수정하기</string>
+</resources>
