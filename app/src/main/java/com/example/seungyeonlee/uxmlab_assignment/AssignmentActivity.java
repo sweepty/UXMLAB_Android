@@ -26,30 +26,35 @@ import java.util.HashMap;
 
 
 public class AssignmentActivity extends AppCompatActivity {
+    //하단 리스트뷰
     ListView asListView;
+
     //과제 본문 내용
     TextView texts;
-    private ScrollView scrollView;
+
+    //과제 제출 버튼
 //    private Button sendButton;
     private String contentText;
+
     String mJsonString;
     ArrayList<String> mArrayList;
+
     AssignmentListViewAdapter adapter;
     AssignmentTextViewAdapter adapterContent;
 
 
     private static String TAG = "phpquerytest";
     private static final String TAG_JSON="homework";
-    private static final String TAG_NO = "hw_no";
-    private static final String TAG_NAME = "hw_name";
+//    private static final String TAG_NO = "hw_no";
+//    private static final String TAG_NAME = "hw_name";
     private static final String TAG_CONTENT ="hw_content";
     private static final String TAG_DUE ="hw_due";
-    private static final String hwDue = "제출 기한";
-    private static final String hwSubmit = "제출 여부";
-    private static final String hwCheck = "채점 여부";
-    private static final String hwContent = "과제 상세 내용";
+//    private static final String hwDue = "제출 기한";
+//    private static final String hwSubmit = "제출 여부";
+//    private static final String hwCheck = "채점 여부";
+//    private static final String hwContent = "과제 상세 내용";
 
-    Assignment as = new Assignment();
+
 
 
 
@@ -61,14 +66,13 @@ public class AssignmentActivity extends AppCompatActivity {
 
         asListView = (ListView) findViewById(R.id.ListView);
         texts = (TextView) findViewById(R.id.textView);
-        scrollView = (ScrollView) findViewById(R.id.content);
+
 
         mArrayList = new ArrayList<>();
 
         GetData task = new GetData();
         task.execute("http://10.0.2.2/~seungyeonlee/query.php");
 
-        texts.setText(as.getAsContent());
 
     }
 
@@ -90,7 +94,6 @@ public class AssignmentActivity extends AppCompatActivity {
             super.onPostExecute(result);
 
             progressDialog.dismiss();
-//            mTextViewResult.setText(result);
             Log.d(TAG, "response  - " + result);
 
             if (result == null){
@@ -173,16 +176,10 @@ public class AssignmentActivity extends AppCompatActivity {
                 JSONObject item = jsonArray.getJSONObject(i);
 
 
-                String name = item.getString(TAG_NAME);
+//                String name = item.getString(TAG_NAME);
                 String content = item.getString(TAG_CONTENT);
                 String due = item.getString(TAG_DUE);
 
-
-                //그냥 바로 arraylist로 가도록 변경할 것
-
-//
-//                hashMap.put(hwDue,"제출기한");
-//                hashMap.put(TAG_DUE, due);
                 mArrayList.add(due);
                 contentText = content;
 
