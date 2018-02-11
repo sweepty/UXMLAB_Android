@@ -2,18 +2,14 @@ package com.example.seungyeonlee.uxmlab_assignment;
 
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+
 import android.util.Log;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.ScrollView;
+
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 import org.json.JSONArray;
@@ -31,14 +27,16 @@ import java.util.HashMap;
 
 public class AssignmentActivity extends AppCompatActivity {
     ListView asListView;
-    ArrayAdapter<String> adapter;
-    private TextView texts;//본문내용
-//    Assignment assignment;
-    private Button sendButton;
-    String myJSON;
-    JSONArray peoples = null;
+    //과제 본문 내용
+    TextView texts;
+    private ScrollView scrollView;
+//    private Button sendButton;
+    private String contentText;
+    String mJsonString;
+    ArrayList<String> mArrayList;
+    AssignmentListViewAdapter adapter;
+    AssignmentTextViewAdapter adapterContent;
 
-    ArrayList<HashMap<String, String>> personList;
 
     private static String TAG = "phpquerytest";
     private static final String TAG_JSON="homework";
@@ -46,6 +44,12 @@ public class AssignmentActivity extends AppCompatActivity {
     private static final String TAG_NAME = "hw_name";
     private static final String TAG_CONTENT ="hw_content";
     private static final String TAG_DUE ="hw_due";
+    private static final String hwDue = "제출 기한";
+    private static final String hwSubmit = "제출 여부";
+    private static final String hwCheck = "채점 여부";
+    private static final String hwContent = "과제 상세 내용";
+
+    Assignment as = new Assignment();
 
 
 
@@ -57,41 +61,157 @@ public class AssignmentActivity extends AppCompatActivity {
 
         asListView = (ListView) findViewById(R.id.ListView);
         texts = (TextView) findViewById(R.id.textView);
+        scrollView = (ScrollView) findViewById(R.id.content);
 
-//        sendButton = (Button) findViewById(R.id.button);
+        mArrayList = new ArrayList<>();
 
-//        getJSON("http://192.168.101.1/Android/getdata.php");
-        AssignmentListViewAdapter adapter;
+        GetData task = new GetData();
+        task.execute("http://10.0.2.2/~seungyeonlee/query.php");
 
-        // Adapter 생성
-        adapter = new AssignmentListViewAdapter();
+        texts.setText(as.getAsContent());
 
-        // 리스트뷰 참조 및 Adapter달기
-        asListView = (ListView) findViewById(R.id.ListView);
-        asListView.setAdapter(adapter);
-
-//        // 리스트뷰에 아이템 추가.
-        adapter.addTitle("content file");
-        adapter.addTitle("제출 상태");
-        adapter.addTitle("채점 상태");
-        adapter.addTitle("마감 일시");
-        adapter.addTitle("제출 파일");
-//        adapter.addItem("content file","helloooooooo");
-//        adapter.addItem("제출 상태", "제출 전/1시간 전 제출 완료됨") ;
-//        adapter.addItem("채점 상태", "채점 완료/채점 전") ;
-//        adapter.addItem("마감 일시","------날짜----");
-//        adapter.addItem("제출 파일", "내가 제출한 파일명");
-
-
-
-        //제출하기 버튼 클릭시.
-//        sendButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//            }
-//        });
     }
+
+    private class GetData extends AsyncTask<String, Void, String>{
+        ProgressDialog progressDialog;
+        String errorString = null;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            progressDialog = ProgressDialog.show(AssignmentActivity.this,
+                    "Please Wait", null, true, true);
+        }
+
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            progressDialog.dismiss();
+//            mTextViewResult.setText(result);
+            Log.d(TAG, "response  - " + result);
+
+            if (result == null){
+
+                texts.setText(errorString);
+            }
+            else {
+
+                mJsonString = result;
+                showResult();
+            }
+        }
+
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            String serverURL = params[0];
+
+
+            try {
+
+                URL url = new URL(serverURL);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+
+                httpURLConnection.setReadTimeout(5000);
+                httpURLConnection.setConnectTimeout(5000);
+                httpURLConnection.connect();
+
+
+                int responseStatusCode = httpURLConnection.getResponseCode();
+                Log.d(TAG, "response code - " + responseStatusCode);
+
+                InputStream inputStream;
+                if(responseStatusCode == HttpURLConnection.HTTP_OK) {
+                    inputStream = httpURLConnection.getInputStream();
+                }
+                else{
+                    inputStream = httpURLConnection.getErrorStream();
+                }
+
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "UTF-8");
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+
+                while((line = bufferedReader.readLine()) != null){
+                    sb.append(line);
+                }
+
+
+                bufferedReader.close();
+
+
+                return sb.toString().trim();
+
+
+            } catch (Exception e) {
+
+                Log.d(TAG, "InsertData: Error ", e);
+                errorString = e.toString();
+
+                return null;
+            }
+
+        }
+    }
+
+
+    private void showResult(){
+        try {
+            JSONObject jsonObject = new JSONObject(mJsonString);
+            JSONArray jsonArray = jsonObject.getJSONArray(TAG_JSON);
+
+            for(int i=0;i<jsonArray.length();i++){
+
+                JSONObject item = jsonArray.getJSONObject(i);
+
+
+                String name = item.getString(TAG_NAME);
+                String content = item.getString(TAG_CONTENT);
+                String due = item.getString(TAG_DUE);
+
+
+                //그냥 바로 arraylist로 가도록 변경할 것
+
+//
+//                hashMap.put(hwDue,"제출기한");
+//                hashMap.put(TAG_DUE, due);
+                mArrayList.add(due);
+                contentText = content;
+
+            }
+
+            //아래 리스트
+            adapter = new AssignmentListViewAdapter();
+            asListView.setAdapter(adapter);
+            adapter.addAsList("content file","없음");
+            adapter.addAsList("제출 상태","없음");
+            adapter.addAsList("채점 상태","없음");
+            adapter.addAsList("마감 일시", String.valueOf(mArrayList.get(0)));
+            adapter.addAsList("제출 파일","없음");
+
+            //과제 상세 내용
+            adapterContent = new AssignmentTextViewAdapter();
+            adapterContent.addContent(contentText);
+            texts.setText(contentText);
+
+        } catch (JSONException e) {
+
+            Log.d(TAG, "showResult : ", e);
+        }
+
+    }
+
+
+
+
 
 
 }

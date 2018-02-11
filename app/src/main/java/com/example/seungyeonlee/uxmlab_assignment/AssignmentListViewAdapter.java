@@ -14,7 +14,8 @@ import java.util.ArrayList;
  */
 
 public class AssignmentListViewAdapter extends BaseAdapter {
-    private ArrayList<AssignmentListViewItem> AsListViewItemList = new ArrayList<AssignmentListViewItem>();
+    private ArrayList<AssignmentListViewItem> asListViewItemList = new ArrayList<AssignmentListViewItem>();
+    private String asContent= new String();
 
     public AssignmentListViewAdapter() {
 
@@ -22,13 +23,12 @@ public class AssignmentListViewAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return AsListViewItemList.size();
+        return asListViewItemList.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return AsListViewItemList.get(position) ;
-
+        return asListViewItemList.get(position) ;
     }
 
     @Override
@@ -46,26 +46,25 @@ public class AssignmentListViewAdapter extends BaseAdapter {
             convertView = inflater.inflate(R.layout.item_list, parent, false);
         }
 
-        TextView titleTextView = (TextView) convertView.findViewById(R.id.textView1) ;
-        TextView descTextView = (TextView) convertView.findViewById(R.id.textView2) ;
+        TextView titleTextView = (TextView) convertView.findViewById(R.id.textView1);
+        TextView descTextView = (TextView) convertView.findViewById(R.id.textView2);
 
-        AssignmentListViewItem listViewItem = AsListViewItemList.get(position);
+
+        AssignmentListViewItem listViewItem = asListViewItemList.get(position);
 
         titleTextView.setText(listViewItem.getAsList_title());
         descTextView.setText(listViewItem.getAsList_content());
 
+
         return convertView;
     }
-    public void addAsList(String title,String content) {
+    public void addAsList(String title,String listContent) {
         AssignmentListViewItem item = new AssignmentListViewItem();
 
         item.setAsList_title(title);
-        item.setAsList_content(content);
-        AsListViewItemList.add(item);
+        item.setAsList_content(listContent);
+        asListViewItemList.add(item);
     }
-    public void addAsTextView(String content) {
-        AssignmentListViewItem item2 = new AssignmentListViewItem();
 
-    }
 
 }

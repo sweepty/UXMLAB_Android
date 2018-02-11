@@ -13,7 +13,7 @@ import static android.content.ContentValues.TAG;
 public class Assignment {
 
     private String asName;
-    private String asContent;
+    private String asContent = "동해물과백두산이마르고닳도록하느님이보우하사우리나라만세 무궁화삼천리화려강산대한사람대한으로길이보전하세동해물과백두산이마르고닳도록하느님이보우하사우리나라만세 무궁화삼천리화려강산대한사람대한으로길이보전하세";
     private String asDue;
 
     public String getAsName() {

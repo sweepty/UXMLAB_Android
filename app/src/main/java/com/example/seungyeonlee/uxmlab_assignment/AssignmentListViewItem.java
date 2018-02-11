@@ -8,6 +8,7 @@ public class AssignmentListViewItem {
     private String asList_title;
     private String asList_content;
 
+
     public String getAsList_title() {
         return asList_title;
     }
