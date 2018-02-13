@@ -41,6 +41,7 @@ public class AssignmentTextViewAdapter extends BaseAdapter {
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.activity_assignment, parent, false);
+
         }
 
         TextView contentTextView = (TextView) convertView.findViewById(R.id.content);

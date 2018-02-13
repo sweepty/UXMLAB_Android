@@ -1,5 +1,6 @@
 package com.example.seungyeonlee.uxmlab_assignment;
 
+import android.app.LauncherActivity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 
 public class AssignmentListViewAdapter extends BaseAdapter {
     private ArrayList<AssignmentListViewItem> asListViewItemList = new ArrayList<AssignmentListViewItem>();
-    private String asContent= new String();
 
     public AssignmentListViewAdapter() {
 
@@ -37,8 +37,19 @@ public class AssignmentListViewAdapter extends BaseAdapter {
     }
 
     @Override
+    public int getItemViewType(int position) {
+        return super.getItemViewType(position);
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 2;
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        final int pos = position;
+//        final int pos = position;
+        int res = 0;
         final Context context = parent.getContext();
 
         if (convertView == null) {
@@ -55,9 +66,9 @@ public class AssignmentListViewAdapter extends BaseAdapter {
         titleTextView.setText(listViewItem.getAsList_title());
         descTextView.setText(listViewItem.getAsList_content());
 
-
         return convertView;
     }
+
     public void addAsList(String title,String listContent) {
         AssignmentListViewItem item = new AssignmentListViewItem();
 
