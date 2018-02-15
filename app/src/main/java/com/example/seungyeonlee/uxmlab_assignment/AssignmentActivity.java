@@ -46,24 +46,22 @@ public class AssignmentActivity extends AppCompatActivity {
     AssignmentListViewAdapter adapter;
     AssignmentTextViewAdapter adapterContent;
 
-
     private static String TAG = "phpquerytest";
     private static final String TAG_JSON="homework";
     private static final String TAG_CONTENT ="hw_content";
     private static final String TAG_DUE ="hw_due";
 
-    //파일 제출 버튼, 파일 선택 버튼
+    //파일 제출
     private Button uploadButton,selectButton;
     private String contentText;
 
-    EditText PdfNameEditText ;
-
-    Uri uri;
-
-    public static final String PDF_UPLOAD_HTTP_URL = "http://10.0.2.2/~seungyeonlee/file_upload.php";
-    public int PDF_REQ_CODE = 1;
-
-    String PdfNameHolder, PdfPathHolder, PdfID;
+//    EditText PdfNameEditText ;
+//    Uri uri;
+//
+//    public static final String PDF_UPLOAD_HTTP_URL = "http://10.0.2.2/~seungyeonlee/file_upload.php";
+//    public int PDF_REQ_CODE = 1;
+//
+//    String PdfNameHolder, PdfPathHolder, PdfID;
 
 
 
@@ -73,108 +71,113 @@ public class AssignmentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_assignment);
 
-        AllowRunTimePermission();
-
         asListView = (ListView) findViewById(R.id.ListView);
         texts = (TextView) findViewById(R.id.textView);
-        uploadButton = (Button) findViewById(R.id.button2);
-        selectButton = (Button) findViewById(R.id.button3);
-        PdfNameEditText = (EditText) findViewById(R.id.editText);
 
+        //과제 데이터 가져오기
         mArrayList = new ArrayList<>();
-
         GetData task = new GetData();
         task.execute("http://10.0.2.2/~seungyeonlee/query.php");
 
-
+//        //파일 등록
+//        AllowRunTimePermission();
+//        selectButton = (Button) findViewById(R.id.button2);
+        uploadButton = (Button) findViewById(R.id.button3);
+//        PdfNameEditText = (EditText) findViewById(R.id.editText);
+//
         uploadButton.setOnClickListener(new View.OnClickListener(){
-
             @Override
             public void onClick(View v) {
-
-                Intent intent = new Intent();
-
-                intent.setType("application/pdf");
-
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-
-                startActivityForResult(Intent.createChooser(intent, "Select Pdf"), PDF_REQ_CODE);
-
-
+                Intent moveToFileUpload =  new Intent(AssignmentActivity.this,FileUploadActivity.class);
+                startActivity(moveToFileUpload);
             }
         });
+//
+//        selectButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent();
+//                intent.setType("application/pdf");
+//                intent.setAction(Intent.ACTION_GET_CONTENT);
+//                startActivityForResult(Intent.createChooser(intent, "Select Pdf"), PDF_REQ_CODE);
+//            }
+//        });
 
-        selectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PdfUploadFunction();
-            }
-        });
-
-
-    }
-
-    private void PdfUploadFunction() {
-        PdfNameHolder = PdfNameEditText.getText().toString().trim();
-
-        PdfPathHolder = FilePath.getPath(this, uri);
-
-        if (PdfPathHolder == null) {
-
-            Toast.makeText(this, "Please move your PDF file to internal storage & try again.", Toast.LENGTH_LONG).show();
-
-        } else {
-
-            try {
-
-                PdfID = UUID.randomUUID().toString();
-
-                new MultipartUploadRequest(this, PdfID, PDF_UPLOAD_HTTP_URL)
-                        .addFileToUpload(PdfPathHolder, "pdf")
-                        .addParameter("name", PdfNameHolder)
-                        .setNotificationConfig(new UploadNotificationConfig())
-                        .setMaxRetries(5)
-                        .startUpload();
-
-            } catch (Exception exception) {
-
-                Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }
 
     }
-    public void AllowRunTimePermission(){
-
-        if (ActivityCompat.shouldShowRequestPermissionRationale(AssignmentActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE))
-        {
-
-            Toast.makeText(AssignmentActivity.this,"READ_EXTERNAL_STORAGE permission Access Dialog", Toast.LENGTH_LONG).show();
-
-        } else {
-
-            ActivityCompat.requestPermissions(AssignmentActivity.this,new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-
-        }
-    }
-    @Override
-    public void onRequestPermissionsResult(int RC, String per[], int[] Result) {
-
-        switch (RC) {
-
-            case 1:
-
-                if (Result.length > 0 && Result[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    Toast.makeText(AssignmentActivity.this,"Permission Granted", Toast.LENGTH_LONG).show();
-
-                } else {
-
-                    Toast.makeText(AssignmentActivity.this,"Permission Canceled", Toast.LENGTH_LONG).show();
-
-                }
-                break;
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//        if (requestCode == PDF_REQ_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+//
+//            uri = data.getData();
+//
+//            selectButton.setText("PDF is Selected");
+//        }
+//    }
+//
+//    private void PdfUploadFunction() {
+//        PdfNameHolder = PdfNameEditText.getText().toString().trim();
+//
+//        PdfPathHolder = FilePath.getPath(this, uri);
+//
+//        if (PdfPathHolder == null) {
+//
+//            Toast.makeText(this, "Please move your PDF file to internal storage & try again.", Toast.LENGTH_LONG).show();
+//
+//        } else {
+//
+//            try {
+//
+//                PdfID = UUID.randomUUID().toString();
+//
+//                new MultipartUploadRequest(this, PdfID, PDF_UPLOAD_HTTP_URL)
+//                        .addFileToUpload(PdfPathHolder, "pdf")
+//                        .addParameter("name", PdfNameHolder)
+//                        .setNotificationConfig(new UploadNotificationConfig())
+//                        .setMaxRetries(5)
+//                        .startUpload();
+//
+//            } catch (Exception exception) {
+//
+//                Toast.makeText(this, exception.getMessage(), Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//
+//    }
+//    public void AllowRunTimePermission(){
+//
+//        if (ActivityCompat.shouldShowRequestPermissionRationale(AssignmentActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE))
+//        {
+//
+//            Toast.makeText(AssignmentActivity.this,"READ_EXTERNAL_STORAGE permission Access Dialog", Toast.LENGTH_LONG).show();
+//
+//        } else {
+//
+//            ActivityCompat.requestPermissions(AssignmentActivity.this,new String[]{ Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+//
+//        }
+//    }
+//    @Override
+//    public void onRequestPermissionsResult(int RC, String per[], int[] Result) {
+//
+//        switch (RC) {
+//
+//            case 1:
+//
+//                if (Result.length > 0 && Result[0] == PackageManager.PERMISSION_GRANTED) {
+//
+//                    Toast.makeText(AssignmentActivity.this,"Permission Granted", Toast.LENGTH_LONG).show();
+//
+//                } else {
+//
+//                    Toast.makeText(AssignmentActivity.this,"Permission Canceled", Toast.LENGTH_LONG).show();
+//
+//                }
+//                break;
+//        }
+//    }
 
 
     private class GetData extends AsyncTask<String, Void, String>{
@@ -300,15 +303,5 @@ public class AssignmentActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PDF_REQ_CODE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-
-            uri = data.getData();
-
-            selectButton.setText("PDF is Selected");
-        }
-    }
 }
