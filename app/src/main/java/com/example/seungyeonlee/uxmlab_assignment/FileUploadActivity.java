@@ -1,264 +1,169 @@
 package com.example.seungyeonlee.uxmlab_assignment;
 
-import android.app.ProgressDialog;
-import android.support.annotation.StringDef;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-
 import android.Manifest;
-import android.content.Intent;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.CursorLoader;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.os.Bundle;
+import android.os.Build;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.content.Intent;
+import android.net.Uri;
+import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
-
-import net.gotev.uploadservice.MultipartUploadRequest;
-import net.gotev.uploadservice.UploadNotificationConfig;
-
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
-public class FileUploadActivity extends AppCompatActivity implements View.OnClickListener {
 
+
+/* 이미지 업로드 밖에 안됨~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~₩
+ */
+public class FileUploadActivity extends AppCompatActivity {//implements View.OnClickListener
+//    Button UploadButton;
     private static final int PICK_FILE_REQUEST = 1;
-    private static final String TAG = FileUploadActivity.class.getSimpleName();
-    private String selectedFilePath;
-    private String SERVER_URL = "http://10.0.2.2/~seungyeonlee/UploadToServer.php";
-    ImageView ivAttachment;
-    Button bUpload;
-    TextView tvFileName;
-    ProgressDialog dialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_file_upload);
-        ivAttachment = (ImageView) findViewById(R.id.ivAttachment);
-        bUpload = (Button) findViewById(R.id.b_upload);
-        tvFileName = (TextView) findViewById(R.id.tv_file_name);
-        ivAttachment.setOnClickListener(this);
-        bUpload.setOnClickListener(this);
-    }
 
-    @Override
-    public void onClick(View v) {
-        if(v== ivAttachment){
-
-            //on attachment icon click
-            showFileChooser();
+        //checking the permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName()));
+            finish();
+            startActivity(intent);
+            return;
         }
-        if(v== bUpload){
 
-            //on upload button Click
-            if(selectedFilePath != null){
-                dialog = ProgressDialog.show(FileUploadActivity.this,"","Uploading File...",true);
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //creating new thread to handle Http Operations
-                        uploadFile(selectedFilePath);
-                    }
-                }).start();
-            }else{
-                Toast.makeText(FileUploadActivity.this,"Please choose a File First",Toast.LENGTH_SHORT).show();
+        //adding click listener to button
+        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //opening file chooser
+                Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(i, 100);
+//                showFileChooser();
             }
-
-        }
-    }
-
-    private void showFileChooser() {
-        Intent intent = new Intent();
-        //sets the select file to all types of files
-        intent.setType("*/*");
-        //allows to select data and return it
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        //starts new activity to select file and return data
-        startActivityForResult(Intent.createChooser(intent,"Choose File to Upload.."),PICK_FILE_REQUEST);
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == FileUploadActivity.RESULT_OK){
-            if(requestCode == PICK_FILE_REQUEST){
-                if(data == null){
-                    //no data present
-                    return;
-                }
+        if (requestCode == 100 && resultCode == RESULT_OK && data != null) {
+            //the image URI
+            Uri selectedImage = data.getData();
 
-
-                Uri selectedFileUri = data.getData();
-                selectedFilePath = FilePath.getPath(this,selectedFileUri);
-                Log.i(TAG,"Selected File Path:" + selectedFilePath);
-
-                if(selectedFilePath != null && !selectedFilePath.equals("")){
-                    tvFileName.setText(selectedFilePath);
-                }else{
-                    Toast.makeText(this,"Cannot upload file to server",Toast.LENGTH_SHORT).show();
-                }
-            }
+            //calling the upload file method after choosing the file
+            uploadFile(selectedImage, "My Image");
         }
     }
+    private void showFileChooser() {
+        Intent filechooser = new Intent();
 
-    //android upload file to server
-    public int uploadFile(final String selectedFilePath){
+        //sets the select file to all types of files
+        filechooser.setType("*/*");
 
-        int serverResponseCode = 0;
+        //allows to select data and return it
+        filechooser.setAction(Intent.ACTION_GET_CONTENT);
 
-        HttpURLConnection connection;
-        DataOutputStream dataOutputStream;
-        String lineEnd = "\r\n";
-        String twoHyphens = "--";
-        String boundary = "*****";
-
-
-        int bytesRead,bytesAvailable,bufferSize;
-        byte[] buffer;
-        int maxBufferSize = 1 * 1024 * 1024;
-        File selectedFile = new File(selectedFilePath);
-
-
-        String[] parts = selectedFilePath.split("/");
-        final String fileName = parts[parts.length-1];
-
-        if (!selectedFile.isFile()){
-            dialog.dismiss();
-
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    tvFileName.setText("Source File Doesn't Exist: " + selectedFilePath);
-                }
-            });
-            return 0;
-        }else{
-            try{
-                FileInputStream fileInputStream = new FileInputStream(selectedFile);
-                URL url = new URL(SERVER_URL);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setDoInput(true);//Allow Inputs
-                connection.setDoOutput(true);//Allow Outputs
-                connection.setUseCaches(false);//Don't use a cached Copy
-                connection.setRequestMethod("POST");
-                connection.setRequestProperty("Connection", "Keep-Alive");
-                connection.setRequestProperty("ENCTYPE", "multipart/form-data");
-                connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
-                connection.setRequestProperty("uploaded_file",selectedFilePath);
-
-                //creating new dataoutputstream
-                dataOutputStream = new DataOutputStream(connection.getOutputStream());
-
-                //writing bytes to data outputstream
-                dataOutputStream.writeBytes(twoHyphens + boundary + lineEnd);
-                dataOutputStream.writeBytes("Content-Disposition: form-data; name=\"uploaded_file\";filename=\""
-                        + selectedFilePath + "\"" + lineEnd);
-
-                dataOutputStream.writeBytes(lineEnd);
-
-                //returns no. of bytes present in fileInputStream
-                bytesAvailable = fileInputStream.available();
-                //selecting the buffer size as minimum of available bytes or 1 MB
-                bufferSize = Math.min(bytesAvailable,maxBufferSize);
-                //setting the buffer as byte array of size of bufferSize
-                buffer = new byte[bufferSize];
-
-                //reads bytes from FileInputStream(from 0th index of buffer to buffersize)
-                bytesRead = fileInputStream.read(buffer,0,bufferSize);
-
-                //loop repeats till bytesRead = -1, i.e., no bytes are left to read
-                while (bytesRead > 0){
-                    //write the bytes read from inputstream
-                    dataOutputStream.write(buffer,0,bufferSize);
-                    bytesAvailable = fileInputStream.available();
-                    bufferSize = Math.min(bytesAvailable,maxBufferSize);
-                    bytesRead = fileInputStream.read(buffer,0,bufferSize);
-                }
-
-                dataOutputStream.writeBytes(lineEnd);
-                dataOutputStream.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
-
-                serverResponseCode = connection.getResponseCode();
-                String serverResponseMessage = connection.getResponseMessage();
-
-                Log.i(TAG, "Server Response is: " + serverResponseMessage + ": " + serverResponseCode);
-
-                //response code of 200 indicates the server status OK
-                if(serverResponseCode == 200){
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            tvFileName.setText("File Upload completed.\n\n You can see the uploaded file here: \n\n" + "http://coderefer.com/extras/uploads/"+ fileName);
-                        }
-                    });
-                }
-
-                //closing the input and output streams
-                fileInputStream.close();
-                dataOutputStream.flush();
-                dataOutputStream.close();
-
-
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(FileUploadActivity.this,"File Not Found",Toast.LENGTH_SHORT).show();
-                    }
-                });
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                Toast.makeText(FileUploadActivity.this, "URL error!", Toast.LENGTH_SHORT).show();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(FileUploadActivity.this, "Cannot Read/Write File!", Toast.LENGTH_SHORT).show();
-            }
-            dialog.dismiss();
-            return serverResponseCode;
-        }
-
+        //starts new activity to select file and return data
+        startActivityForResult(Intent.createChooser(filechooser,"Choose File to Upload.."),PICK_FILE_REQUEST);
+        startActivityForResult(filechooser, 100);
     }
 
+    private void uploadFile(Uri fileUri, String desc) {
+
+        //creating a file
+        File file = new File(getRealPathFromURI(fileUri));
+
+        //creating request body for file
+        RequestBody requestFile = RequestBody.create(MediaType.parse(getContentResolver().getType(fileUri)), file);
+        RequestBody descBody = RequestBody.create(MediaType.parse("text/plain"), desc);
+
+        //The gson builder
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+
+        //creating retrofit object
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Api.BASE_URL)
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
+
+        //creating our api
+        Api api = retrofit.create(Api.class);
+
+        //creating a call and calling the upload image method
+        Call<MyResponse> call = api.uploadImage(requestFile, descBody);
+
+        //finally performing the call
+        call.enqueue(new Callback<MyResponse>() {
+            @Override
+            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+                if (!response.body().error) {
+                    Toast.makeText(getApplicationContext(), "File Uploaded Successfully...", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Some error occurred...", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MyResponse> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+                System.out.println(t.getMessage());
+            }
+        });
+    }
+
+    /*
+    * This method is fetching the absolute path of the image file
+    * if you want to upload other kind of files like .pdf, .docx
+    * you need to make changes on this method only
+    * Rest part will be the same
+    * */
+    private String getRealPathFromURI(Uri contentUri) {
+        String[] proj = {MediaStore.Images.Media.DATA};
+        CursorLoader loader = new CursorLoader(this, contentUri, proj, null, null, null);
+        Cursor cursor = loader.loadInBackground();
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        String result = cursor.getString(column_index);
+        cursor.close();
+        return result;
+    }
 }
